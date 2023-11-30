@@ -12,7 +12,6 @@ pipe_img = pygame.image.load('images/pipe.png').convert_alpha()
 bg_img = pygame.image.load('images/bg-image.png').convert()
 bg_img = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))
 
-
 BIRD_WIDTH, BIRD_HEIGHT = bird_img.get_width() // 10, bird_img.get_height() // 10
 bird_img = pygame.transform.scale(bird_img, (BIRD_WIDTH, BIRD_HEIGHT))
 bird_rect = bird_img.get_rect(center=(200, HEIGHT // 2))
@@ -28,6 +27,12 @@ pipe_speed = 5
 gravity = 0.5
 bird_movement = 0
 flap_strength = -10
+
+score = 0
+scored_pipes = []
+
+pygame.font.init()
+score_font = pygame.font.SysFont('Pixelated', 70)
 
 clock = pygame.time.Clock()
 running = True
@@ -70,11 +75,25 @@ while running:
 
     pipe_list = move_pipes(pipe_list)
     if len(pipe_list) == 0 or pipe_list[-1].centerx < WIDTH - 350:
-        pipe_list.extend(create_pipe())
+        new_pipes = create_pipe()
+        pipe_list.extend(new_pipes)
+        scored_pipes.extend([False, False])
+
+    for i, pipe in enumerate(pipe_list):
+        if pipe.centerx < bird_rect.left and not scored_pipes[i]:
+            score += 0.5
+            scored_pipes[i] = True
+
+    if pipe_list and pipe_list[0].centerx < -PIPE_WIDTH:
+        pipe_list.pop(0)
+        scored_pipes.pop(0)
 
     screen.blit(bg_img, (0, 0))
     screen.blit(bird_img, bird_rect)
     draw_pipes(pipe_list)
+
+    score_surface = score_font.render(f'{int(score)}', True, (255, 255, 255))
+    screen.blit(score_surface, (WIDTH // 2, 50))
 
     if check_collision(bird_rect, pipe_list):
         running = False
